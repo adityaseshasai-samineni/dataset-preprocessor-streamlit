@@ -4,6 +4,7 @@ from io import StringIO
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 import os
+import base64
 
 def home_page():
     if st.button("Data Description"):
