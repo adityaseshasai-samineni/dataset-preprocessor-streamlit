@@ -316,8 +316,11 @@ def download():
     file_name = st.text_input("Enter the file name", "preprocessed_data.csv")
 
     if st.button("Download"):
-        st.session_state.df.to_csv(file_name, index=False)
-        st.markdown(f"File saved as {file_name} in the current directory: {os.getcwd()}")
+        # Create a link to download the CSV file
+        csv = st.session_state.df.to_csv(file_name, index=False)
+        b64 = base64.b64encode(csv.encode()).decode()
+        href = f'<a href="data:file/csv;base64,{b64}" download="{file_name}">Click here to download {file_name}</a>'
+        st.markdown(href, unsafe_allow_html=True)
 
 
 def main():
