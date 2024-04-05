@@ -3,8 +3,10 @@ import pandas as pd
 from io import StringIO
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
-import os
+import io
 import base64
+import logging
+import numpy as np
 
 def side_bar():
     st.session_state.confirm_reset = False
@@ -14,6 +16,8 @@ def side_bar():
             st.session_state.page = "data_description"
         if st.button("Handle Null values"):
             st.session_state.page = "Hand_null_val"
+        if st.button("Feature Selection"):
+            st.session_state.page = "feature_selection"
         if st.button("Encode Data"):
             st.session_state.page = "encode_data"
         if st.button("Feature Scaling"):
@@ -24,19 +28,20 @@ def side_bar():
             st.session_state.page = "reset"
         if st.button("Work with another dataset"):
             st.session_state.page = "confirm_page"
-
 def normalize_scaler_page():
     numeric_columns = st.session_state.df.select_dtypes(include=['int64', 'float64']).columns.tolist()
     if st.button("Normalize whole dataset"):
         scaler = MinMaxScaler()
         st.session_state.df[numeric_columns] = scaler.fit_transform(st.session_state.df[numeric_columns])
         st.write(st.session_state.df)
+        logging.info("Whole dataset normalized")
     st.write("OR")
     st.session_state.selected_column = st.selectbox("Select a column to normalize", numeric_columns)
     if st.button("Normalize a column"):
         scaler = MinMaxScaler()
         st.session_state.df[st.session_state.selected_column] = scaler.fit_transform(st.session_state.df[[st.session_state.selected_column]])
         st.write(st.session_state.df)
+        logging.info(f"Column \"{st.session_state.selected_column}\" normalized")
     if st.button("back"):
         st.session_state.page = "feature_scale"
 
@@ -46,12 +51,14 @@ def Standardscaler_page():
         scaler = StandardScaler()
         st.session_state.df[numeric_columns] = scaler.fit_transform(st.session_state.df[numeric_columns])
         st.write(st.session_state.df)
+        logging.info("Whole dataset standardized")
     st.write("OR")
     st.session_state.selected_column = st.selectbox("Select a column to standardize", numeric_columns)
     if st.button("Submit"):
         scaler = StandardScaler()
         st.session_state.df[st.session_state.selected_column] = scaler.fit_transform(st.session_state.df[[st.session_state.selected_column]])
         st.write(st.session_state.df)
+        logging.info(f"Column \"{st.session_state.selected_column}\" standardized")
     if st.button("back"):
         st.session_state.page = "feature_scale"
 
@@ -62,6 +69,7 @@ def confirm_page():
     st.write("Are you sure you want to proceed?")
     if st.button("Yes"):
         st.session_state.page = "input"
+        logging.info("Confirmed to work with another dataset")
         st.rerun()
     if st.button("No"):
         st.session_state.page = "home"
@@ -75,6 +83,7 @@ def reset_page():
     user_input = st.text_input("Enter 'reset' to confirm reset:")
     if st.button("Submit") and user_input == "reset":
         st.session_state.df = st.session_state.original_df.copy()
+        logging.info("Performed DataFrame reset")
         st.rerun()
 
 def home_page():
@@ -86,12 +95,10 @@ def home_page():
         st.session_state.page = "encode_data"
     if st.button("Feature Scaling"):
         st.session_state.page = "feature_scale"
+    if st.button("Feature Selection"):
+        st.session_state.page = "feature_selection"
     if st.button("Work with another dataset"):
-        st.warning("All the work done on the current dataset will be lost.")
-        if st.button("Proceed"):
-            st.session_state.page = "input"
-        elif st.button("Cancel"):
-            st.rerun()
+        st.session_state.page = "confirm_page"
 
 def data_description_page():
     side_bar()
@@ -121,7 +128,7 @@ def data_description_page():
                     sno += 1
             elif line.startswith('---'):
                 parse_started = True
-
+        logging.info("Dataset's Properties displayed")
         # Creating a DataFrame from the parsed info data
         info_df = pd.DataFrame(info_data, columns=['sno', 'Column', 'Non-Null Count', 'Dtype'])
 
@@ -134,32 +141,66 @@ def column_describe_page():
     side_bar()
 
     with st.form(key='column_form'):
-            st.header('Columns')
-            columns = st.session_state.df.columns.to_list()
-            col_name = st.session_state.selected_column = st.selectbox("Select a column to normalize", columns)
-            submit_button = st.form_submit_button("Submit")
-            if submit_button:
-                if col_name in st.session_state.df.columns.to_list():
-                    st.table(st.session_state.df[col_name].describe())
-                else:
-                    st.write(f"The column '{col_name}' does not exist in the DataFrame.")
-
+        st.header('Columns')
+        columns = st.session_state.df.columns.to_list()
+        col_name = st.session_state.selected_column = st.selectbox("Select a column to normalize", columns)
+        submit_button = st.form_submit_button("Submit")
+        if submit_button:
+            if col_name in st.session_state.df.columns.to_list():
+                st.table(st.session_state.df[col_name].describe())
+                logging.info(f"Described column \"{col_name}\"")
+            else:
+                st.write(f"The column '{col_name}' does not exist in the DataFrame.")
 
 def input():
     st.title("Dataset Preprocessor")
     st.write("Welcome to the Dataset Preprocessor app! This tool helps you preprocess your datasets.")
     
     st.header("Upload Your Dataset")
-    uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
+    uploaded_file = st.file_uploader("Choose a CSV or Excel file", type=["csv", "xlsx"])
 
     if uploaded_file is not None:
-        # Read the CSV file into a DataFrame
-        df = pd.read_csv(uploaded_file)
+        # Determine the file type
+        file_type = uploaded_file.type
+
+        # Read the file into a DataFrame
+        if file_type == "text/csv":
+            df = pd.read_csv(uploaded_file)
+        elif file_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+            df = pd.read_excel(uploaded_file)
+        logging.info("\"%s\" uploaded successfully", uploaded_file)
         st.session_state.original_df = df.copy()
         st.session_state.df = df
-         # Buttons for different actions
+        # Buttons for different actions
         if st.button("continue"):
             st.session_state.page = "home"
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def feature_selection_page():
+    side_bar()
+
+    st.header("Feature Selection")
+    st.write("Correlation Matrix of the dataset:")
+    
+    numerical_columns = st.session_state.df.select_dtypes(include=['int','float']).columns.tolist()
+
+    corr = st.session_state.df[numerical_columns].corr()
+    mask = np.triu(np.ones_like(corr, dtype=bool))
+    f, ax = plt.subplots(figsize=(11, 9))
+    sns.heatmap(corr,annot=True,mask=mask, cmap=plt.cm.Reds, vmax=.3, center=0,
+                square=True, linewidths=.5, cbar_kws={"shrink": .5})
+    st.pyplot(f)
+
+    with st.form(key='drop_columns'):
+        columns = st.session_state.df.columns.to_list()
+        selected_columns = st.multiselect("Select columns to drop", columns)
+        submit_button = st.form_submit_button("Submit")
+        if submit_button:
+            st.session_state.df = st.session_state.df.drop(selected_columns, axis=1)
+            logging.info(f"Dropped columns: {', '.join(selected_columns)}")
+            st.rerun()
 
 def null_val_handle_page():
     side_bar()
@@ -169,6 +210,10 @@ def null_val_handle_page():
         st.write(st.session_state.df.isnull().sum()) 
     if st.button("Remove columns"):
         st.session_state.page = "remove_col"
+    if st.button("Drop NULL values"):
+        st.session_state.df.dropna(inplace=True)
+        st.write("Rows with null values have been dropped.")
+        logging.info("NULL values dropped")
     if st.button("Fill NULL values"):
         st.session_state.page = "fill_null_val"
     if st.button("show DataSet"):
@@ -178,15 +223,18 @@ def remove_col_page():
     side_bar()
 
     with st.form(key='remove_col'):
-            columns = st.session_state.df.columns.to_list()
-            col_name = st.session_state.selected_column = st.selectbox("Select a column to remove it.", columns)
-            submit_button = st.form_submit_button("Submit")
-            if submit_button:
-                if col_name in st.session_state.df.columns.to_list():
-                    st.session_state.df = st.session_state.df.drop([col_name], axis=1)
-                    st.write(f"The column '{col_name}' Dropped")
-                else:
-                    st.write(f"The column '{col_name}' does not exist in the DataFrame.")
+        columns = st.session_state.df.columns.to_list()
+        col_name = st.session_state.selected_column = st.selectbox("Select a column to remove it.", columns)
+        submit_button = st.form_submit_button("Submit")
+        if submit_button:
+            if col_name in st.session_state.df.columns.to_list():
+                st.session_state.df = st.session_state.df.drop([col_name], axis=1)
+                st.write(f"The column '{col_name}' Dropped")
+                logging.info(f"Column \"{col_name}\" removed")
+            else:
+                st.write(f"The column '{col_name}' does not exist in the DataFrame.")
+                logging.error(f"Column \"{col_name}\" does not exist in the DataFrame")
+            
 
 
 def fill_null_val():
@@ -196,25 +244,33 @@ def fill_null_val():
         st.header('Fill NULL values')
         columns = st.session_state.df.columns.to_list()
         col_name = st.session_state.selected_column = st.selectbox("Select a column to FILL", columns)
-        fill_method = st.radio("Choose a method to fill NULL values", ("Zero","Mean", "Median", "Mode","Pad","Backfill"))
+        fill_method = st.radio("Choose a method to fill NULL values", ("Zero","Mean", "Median", "Mode","Forwardfill","Backfill"))
         submit_button = st.form_submit_button("Submit")
         if submit_button:
             if col_name in st.session_state.df.columns.to_list():
                 if fill_method == "Zero":
                     st.session_state.df[col_name].fillna(0, inplace=True)
+                    logging.info(f"Filled column \"{col_name}\" with 0")
                 elif fill_method == "Mean":
                     st.session_state.df[col_name].fillna(st.session_state.df[col_name].mean(), inplace=True)
+                    logging.info(f"Filled column \"{col_name}\" with mean")
                 elif fill_method == "Median":
                     st.session_state.df[col_name].fillna(st.session_state.df[col_name].median(), inplace=True)
+                    logging.info(f"Filled column \"{col_name}\" with median")
                 elif fill_method == 'Mode':
                     st.session_state.df[col_name].fillna(st.session_state.df[col_name].mode()[0], inplace=True)
-                elif fill_method == 'Pad':
-                    st.session_state.df[col_name].fillna(method='pad', inplace=True)
+                    logging.info(f"Filled column \"{col_name}\" with mode")
+                elif fill_method == 'Forwardfill':
+                    st.session_state.df[col_name] = st.session_state.df[col_name].ffill()
+                    logging.info(f"Filled column \"{col_name}\" with forwardfill")
                 elif fill_method == 'Backfill':
-                    st.session_state.df[col_name].fillna(method='bfill', inplace=True)
+                    st.session_state.df[col_name] = st.session_state.df[col_name].bfill()
+                    logging.info(f"Filled column \"{col_name}\" with backfill")
                 st.write(f"The column '{col_name}' Filled")
             else:
                 st.write(f"The column '{col_name}' does not exist in the DataFrame.")
+                logging.error(f"Column \"{col_name}\" does not exist in the DataFrame")
+
 def encode_data():
     side_bar()
     st.header("Categorical Columns")
@@ -229,10 +285,9 @@ def encode_data():
     if st.button("Submit"):
         st.session_state.df = pd.get_dummies(st.session_state.df, columns=[selected_column],dtype=int)
         st.write(st.session_state.df)
-    
+        logging.info(f"Column \"{selected_column}\" encoded")
     if st.button("show DataSet"):
         st.write(st.session_state.df)
-
 
 def feature_scale():
     side_bar()
@@ -248,17 +303,36 @@ def download():
     side_bar()
 
     st.header("Download the preprocessed dataset")
-    file_name = st.text_input("Enter the file name", "preprocessed_data.csv")
+    file_name = st.text_input("Enter the file name", "preprocessed_data")
+    file_format = st.radio("Select file format", ["csv", "xlsx"])
 
-    if st.button("Download CSV"):
-        st.write("Downloading CSV...")
-        csv = st.session_state.df.to_csv(index=False)
-        b64 = base64.b64encode(csv.encode()).decode()  # Convert DataFrame to bytes and encode as base64
-        href = f'<a href="data:file/csv;base64,{b64}" download="'+file_name+'">Click here Download CSV File</a>'
+    if st.button("Download"):
+        st.write(f"Downloading {file_name}.{file_format}...")
+        
+        if file_format == "csv":
+            csv = st.session_state.df.to_csv(index=False)
+            b64 = base64.b64encode(csv.encode()).decode()  # Convert DataFrame to bytes and encode as base64
+            href = f'<a href="data:file/csv;base64,{b64}" download="{file_name}.csv">Click here to download CSV file</a>'
+        elif file_format == "xlsx":
+            towrite = io.BytesIO()
+            downloaded_file = st.session_state.df.to_excel(towrite, index=False, engine='openpyxl') 
+            towrite.seek(0)  
+            b64 = base64.b64encode(towrite.read()).decode() 
+            href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{file_name}.xlsx">Click here to download Excel file</a>'
+        
+        st.markdown(href, unsafe_allow_html=True)
+        logging.info(f"Downloaded the preprocessed dataset as \"{file_name}.{file_format}\"")
+        with open('logfile.log', 'r') as f:
+            log_text = f.read()
+
+        b64 = base64.b64encode(log_text.encode()).decode()  # Convert log text to bytes and encode as base64
+        href = f'<a href="data:file/log;base64,{b64}" download="{file_name}.log">Click here to download the LOG file</a>'
         st.markdown(href, unsafe_allow_html=True)
 
-
 def main():
+
+    logging.basicConfig(filename='logfile.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
     st.set_page_config(page_title="Dataset Preprocessor",layout="wide")
     if 'page' not in st.session_state:
         st.session_state.page = "input"
@@ -293,6 +367,8 @@ def main():
         normalize_scaler_page()
     elif st.session_state.page == "standardize_scaler":
         Standardscaler_page()
+    elif st.session_state.page == "feature_selection":
+        feature_selection_page()
 
 if __name__ == "__main__":
     main()
