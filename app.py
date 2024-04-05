@@ -7,6 +7,8 @@ import io
 import base64
 import logging
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def side_bar():
     st.session_state.confirm_reset = False
@@ -174,9 +176,6 @@ def input():
         # Buttons for different actions
         if st.button("continue"):
             st.session_state.page = "home"
-
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 def feature_selection_page():
     side_bar()
