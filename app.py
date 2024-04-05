@@ -30,6 +30,8 @@ def side_bar():
             st.session_state.page = "reset"
         if st.button("Work with another dataset"):
             st.session_state.page = "confirm_page"
+        if st.button("Documentation"):
+            st.session_state.page = "documentation"
 def normalize_scaler_page():
     numeric_columns = st.session_state.df.select_dtypes(include=['int64', 'float64']).columns.tolist()
     if st.button("Normalize whole dataset"):
@@ -101,6 +103,8 @@ def home_page():
         st.session_state.page = "feature_selection"
     if st.button("Work with another dataset"):
         st.session_state.page = "confirm_page"
+    if st.button("Documentation"):
+        st.session_state.page = "documentation"
 
 def data_description_page():
     side_bar()
@@ -328,6 +332,38 @@ def download():
         href = f'<a href="data:file/log;base64,{b64}" download="{file_name}.log">Click here to download the LOG file</a>'
         st.markdown(href, unsafe_allow_html=True)
 
+def documentation_page():
+    side_bar()
+
+    st.header("Documentation")
+
+    st.subheader("Upload Your Dataset")
+    st.write("You can upload your dataset in CSV or Excel format. The dataset will be read into a DataFrame.")
+
+    st.subheader("Data Description")
+    st.write("You can view a description of the dataset or a specific column. The description includes count, mean, std, min, 25%, 50%, 75%, and max for numerical columns and count, unique, top, and freq for categorical columns.")
+
+    st.subheader("Handle Null Values")
+    st.write("You can handle null values in the dataset. You can view the null values, remove columns with null values, drop rows with null values, or fill null values with a specific value.")
+
+    st.subheader("Encode Data")
+    st.write("You can encode categorical columns in the dataset. The selected column will be replaced with one-hot encoded columns.")
+
+    st.subheader("Feature Scaling")
+    st.write("You can scale numerical columns in the dataset. You can normalize the whole dataset or a specific column, or standardize the whole dataset or a specific column.")
+
+    st.subheader("Feature Selection")
+    st.write("You can select features in the dataset. You can view a correlation matrix of the dataset and drop selected columns.")
+
+    st.subheader("Download the Dataset")
+    st.write("You can download the preprocessed dataset in CSV or Excel format. You can also download the log file containing the actions performed on the dataset.")
+
+    st.subheader("Reset DataFrame")
+    st.write("You can reset the DataFrame. This action reverses all the operations performed on the DataFrame.")
+
+    st.subheader("Work with Another Dataset")
+    st.write("You can choose to work with another dataset. All the work done on the current dataset will be lost.")
+
 def main():
 
     logging.basicConfig(filename='logfile.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -368,6 +404,8 @@ def main():
         Standardscaler_page()
     elif st.session_state.page == "feature_selection":
         feature_selection_page()
+    elif st.session_state.page == "documentation":
+        documentation_page()
 
 if __name__ == "__main__":
     main()
