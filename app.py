@@ -6,19 +6,8 @@ from sklearn.preprocessing import StandardScaler
 import os
 import base64
 
-def home_page():
-    if st.button("Data Description"):
-        st.session_state.page = "data_description"
-    if st.button("Handle Null values"):
-        st.session_state.page = "Hand_null_val"
-    if st.button("Encode Data"):
-        st.session_state.page = "encode_data"
-    if st.button("Feature Scaling"):
-        st.session_state.page = "feature_scale"
-    if st.button("Download the dataset"):
-        st.session_state.page = "download"
-
-def data_description_page():
+def side_bar():
+    st.session_state.confirm_reset = False
     with st.sidebar:
         st.title("Dataset Preprocessor")
         if st.button("Data Description"):
@@ -31,6 +20,51 @@ def data_description_page():
             st.session_state.page = "feature_scale"
         if st.button("Download the dataset"):
             st.session_state.page = "download"
+        if st.button("Reset DataFrame"):
+            st.session_state.page = "reset"
+        if st.button("Work with another dataset"):
+            st.session_state.page = "confirm_page"
+    
+def confirm_page():
+    side_bar()
+    st.title("Work with another dataset")
+    st.write("All the work done on the current dataset will be lost.")
+    st.write("Are you sure you want to proceed?")
+    if st.button("Yes"):
+        st.session_state.page = "input"
+        st.experimental_rerun()
+    if st.button("No"):
+        st.session_state.page = "home"
+        st.experimental_rerun()
+ 
+def reset_page():
+    side_bar()
+    st.title("Reset DataFrame")
+    st.write("This action reverses all the operations performed on the DataFrame.")
+    st.write("To proceed, enter 'reset' in the text box and click the 'Submit' button.")
+    user_input = st.text_input("Enter 'reset' to confirm reset:")
+    if st.button("Submit") and user_input == "reset":
+        st.session_state.df = st.session_state.original_df.copy()
+        st.experimental_rerun()
+
+def home_page():
+    if st.button("Data Description"):
+        st.session_state.page = "data_description"
+    if st.button("Handle Null values"):
+        st.session_state.page = "Hand_null_val"
+    if st.button("Encode Data"):
+        st.session_state.page = "encode_data"
+    if st.button("Feature Scaling"):
+        st.session_state.page = "feature_scale"
+    if st.button("Work with another dataset"):
+        st.warning("All the work done on the current dataset will be lost.")
+        if st.button("Proceed"):
+            st.session_state.page = "input"
+        elif st.button("Cancel"):
+            st.experimental_rerun()
+
+def data_description_page():
+    side_bar()
             
     st.header("Data Description Page")
     if st.button("Describe a column"):
@@ -69,18 +103,7 @@ def data_description_page():
     #     st.session_state.page = "home"
 
 def column_describe_page():
-    with st.sidebar:
-        st.title("Dataset Preprocessor")
-        if st.button("Data Description"):
-            st.session_state.page = "data_description"
-        if st.button("Handle Null values"):
-            st.session_state.page = "Hand_null_val"
-        if st.button("Encode Data"):
-            st.session_state.page = "encode_data"
-        if st.button("Feature Scaling"):
-            st.session_state.page = "feature_scale"
-        if st.button("Download the dataset"):
-            st.session_state.page = "download"
+    side_bar()
 
     with st.form(key='column_form'):
             st.header('Columns')
@@ -104,24 +127,14 @@ def input():
     if uploaded_file is not None:
         # Read the CSV file into a DataFrame
         df = pd.read_csv(uploaded_file)
+        st.session_state.original_df = df.copy()
         st.session_state.df = df
          # Buttons for different actions
         if st.button("continue"):
             st.session_state.page = "home"
 
 def null_val_handle_page():
-    with st.sidebar:
-        st.title("Dataset Preprocessor")
-        if st.button("Data Description"):
-            st.session_state.page = "data_description"
-        if st.button("Handle Null values"):
-            st.session_state.page = "Hand_null_val"
-        if st.button("Encode Data"):
-            st.session_state.page = "encode_data"
-        if st.button("Feature Scaling"):
-            st.session_state.page = "feature_scale"
-        if st.button("Download the dataset"):
-            st.session_state.page = "download"
+    side_bar()
 
     st.header("Handle NULL values")
     if st.button("Show NULL values"):
@@ -134,18 +147,7 @@ def null_val_handle_page():
         st.table(st.session_state.df)
 
 def remove_col_page():
-    with st.sidebar:
-        st.title("Dataset Preprocessor")
-        if st.button("Data Description"):
-            st.session_state.page = "data_description"
-        if st.button("Handle Null values"):
-            st.session_state.page = "Hand_null_val"
-        if st.button("Encode Data"):
-            st.session_state.page = "encode_data"
-        if st.button("Feature Scaling"):
-            st.session_state.page = "feature_scale"
-        if st.button("Download the dataset"):
-            st.session_state.page = "download"
+    side_bar()
 
     with st.form(key='remove_col'):
             columns = st.session_state.df.columns.to_list()
@@ -160,51 +162,33 @@ def remove_col_page():
 
 
 def fill_null_val():
-    with st.sidebar:
-        st.title("Dataset Preprocessor")
-        if st.button("Data Description"):
-            st.session_state.page = "data_description"
-        if st.button("Handle Null values"):
-            st.session_state.page = "Hand_null_val"
-        if st.button("Encode Data"):
-            st.session_state.page = "encode_data"
-        if st.button("Feature Scaling"):
-            st.session_state.page = "feature_scale"
-        if st.button("Download the dataset"):
-            st.session_state.page = "download"
-
-    with st.form(key='fill_null_val'):
-            st.header('Fill NULL values')
-            columns = st.session_state.df.columns.to_list()
-            col_name = st.session_state.selected_column = st.selectbox("Select a column to FILL", columns)
-            submit_button = st.form_submit_button("Submit")
-            if submit_button:
-                if col_name in st.session_state.df.columns.to_list():
-                    if st.form_submit_button("Mean"):
-                        st.session_state.df = st.session_state.df[col_name].fillna(st.session_state.df[col_name].mean(), inplace=True)
-                        st.write(f"The column '{col_name}' Filled")
-                    if st.form_submit_button("Median"):
-                        st.session_state.df = st.session_state.df[col_name].fillna(st.session_state.df[col_name].median(), inplace=True)
-                    if st.form_submit_button('Mode'):
-                        st.session_state.df = st.session_state.df[col_name].fillna(st.session_state.df[col_name].mode(), inplace=True)
-                    st.write(f"The column '{col_name}' Filled")
-                else:
-                    st.write(f"The column '{col_name}' does not exist in the DataFrame.")
-
+    side_bar()
+    
+    with st.form(key='fill_null_values'):
+        st.header('Fill NULL values')
+        columns = st.session_state.df.columns.to_list()
+        col_name = st.session_state.selected_column = st.selectbox("Select a column to FILL", columns)
+        fill_method = st.radio("Choose a method to fill NULL values", ("Zero","Mean", "Median", "Mode","Pad","Backfill"))
+        submit_button = st.form_submit_button("Submit")
+        if submit_button:
+            if col_name in st.session_state.df.columns.to_list():
+                if fill_method == "Zero":
+                    st.session_state.df[col_name].fillna(0, inplace=True)
+                elif fill_method == "Mean":
+                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].mean(), inplace=True)
+                elif fill_method == "Median":
+                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].median(), inplace=True)
+                elif fill_method == 'Mode':
+                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].mode()[0], inplace=True)
+                elif fill_method == 'Pad':
+                    st.session_state.df[col_name].fillna(method='pad', inplace=True)
+                elif fill_method == 'Backfill':
+                    st.session_state.df[col_name].fillna(method='bfill', inplace=True)
+                st.write(f"The column '{col_name}' Filled")
+            else:
+                st.write(f"The column '{col_name}' does not exist in the DataFrame.")
 def encode_data():
-    with st.sidebar:
-        st.title("Dataset Preprocessor")
-        if st.button("Data Description"):
-            st.session_state.page = "data_description"
-        if st.button("Handle Null values"):
-            st.session_state.page = "Hand_null_val"
-        if st.button("Encode Data"):
-            st.session_state.page = "encode_data"
-        if st.button("Feature Scaling"):
-            st.session_state.page = "feature_scale"
-        if st.button("Download the dataset"):
-            st.session_state.page = "download"
-
+    side_bar()
     st.header("Categorical Columns")
     categorical_columns = st.session_state.df.select_dtypes(include=['object'])
     unique_counts = {col: st.session_state.df[col].nunique() for col in categorical_columns}
@@ -215,26 +199,15 @@ def encode_data():
     selected_column = st.selectbox("Select a column to encode", categorical_columns)
 
     if st.button("Submit"):
-        st.session_state.df = pd.get_dummies(st.session_state.df, columns=[selected_column])
-        st.table(st.session_state.df)
+        st.session_state.df = pd.get_dummies(st.session_state.df, columns=[selected_column],dtype=int)
+        st.write(st.session_state.df)
     
     if st.button("show DataSet"):
-        st.table(st.session_state.df)
+        st.write(st.session_state.df)
 
 
 def feature_scale():
-    with st.sidebar:
-        st.title("Dataset Preprocessor")
-        if st.button("Data Description"):
-            st.session_state.page = "data_description"
-        if st.button("Handle Null values"):
-            st.session_state.page = "Hand_null_val"
-        if st.button("Encode Data"):
-            st.session_state.page = "encode_data"
-        if st.button("Feature Scaling"):
-            st.session_state.page = "feature_scale"
-        if st.button("Download the dataset"):
-            st.session_state.page = "download"
+    side_bar()
 
     numeric_columns = st.session_state.df.select_dtypes(include=['int64', 'float64']).columns.tolist()
     
@@ -300,19 +273,8 @@ def feature_scale():
             button_clicked2 = button_placeholder_stan.button("Standardization (Standard Scaler)")
 
 def download():
-    with st.sidebar:
-        st.title("Dataset Preprocessor")
-        if st.button("Data Description"):
-            st.session_state.page = "data_description"
-        if st.button("Handle Null values"):
-            st.session_state.page = "Hand_null_val"
-        if st.button("Encode Data"):
-            st.session_state.page = "encode_data"
-        if st.button("Feature Scaling"):
-            st.session_state.page = "feature_scale"
-        if st.button("Download the dataset"):
-            st.session_state.page = "download"
-    
+    side_bar()
+
     st.header("Download the preprocessed dataset")
     file_name = st.text_input("Enter the file name", "preprocessed_data.csv")
 
@@ -351,6 +313,10 @@ def main():
         feature_scale()
     elif st.session_state.page == "download":
         download()
+    elif st.session_state.page == "reset":
+        reset_page()
+    elif st.session_state.page == "confirm_page":
+        confirm_page()
 
 if __name__ == "__main__":
     main()
