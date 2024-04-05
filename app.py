@@ -24,7 +24,37 @@ def side_bar():
             st.session_state.page = "reset"
         if st.button("Work with another dataset"):
             st.session_state.page = "confirm_page"
-    
+
+def normalize_scaler_page():
+    numeric_columns = st.session_state.df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+    if st.button("Normalize whole dataset"):
+        scaler = MinMaxScaler()
+        st.session_state.df[numeric_columns] = scaler.fit_transform(st.session_state.df[numeric_columns])
+        st.write(st.session_state.df)
+    st.write("OR")
+    st.session_state.selected_column = st.selectbox("Select a column to normalize", numeric_columns)
+    if st.button("Normalize a column"):
+        scaler = MinMaxScaler()
+        st.session_state.df[st.session_state.selected_column] = scaler.fit_transform(st.session_state.df[[st.session_state.selected_column]])
+        st.write(st.session_state.df)
+    if st.button("back"):
+        st.session_state.page = "feature_scale"
+
+def Standardscaler_page():
+    numeric_columns = st.session_state.df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+    if st.button("Standardize whole dataset"):
+        scaler = StandardScaler()
+        st.session_state.df[numeric_columns] = scaler.fit_transform(st.session_state.df[numeric_columns])
+        st.write(st.session_state.df)
+    st.write("OR")
+    st.session_state.selected_column = st.selectbox("Select a column to standardize", numeric_columns)
+    if st.button("Submit"):
+        scaler = StandardScaler()
+        st.session_state.df[st.session_state.selected_column] = scaler.fit_transform(st.session_state.df[[st.session_state.selected_column]])
+        st.write(st.session_state.df)
+    if st.button("back"):
+        st.session_state.page = "feature_scale"
+
 def confirm_page():
     side_bar()
     st.title("Work with another dataset")
@@ -32,10 +62,10 @@ def confirm_page():
     st.write("Are you sure you want to proceed?")
     if st.button("Yes"):
         st.session_state.page = "input"
-        st.experimental_rerun()
+        st.rerun()
     if st.button("No"):
         st.session_state.page = "home"
-        st.experimental_rerun()
+        st.rerun()
  
 def reset_page():
     side_bar()
@@ -45,7 +75,7 @@ def reset_page():
     user_input = st.text_input("Enter 'reset' to confirm reset:")
     if st.button("Submit") and user_input == "reset":
         st.session_state.df = st.session_state.original_df.copy()
-        st.experimental_rerun()
+        st.rerun()
 
 def home_page():
     if st.button("Data Description"):
@@ -61,7 +91,7 @@ def home_page():
         if st.button("Proceed"):
             st.session_state.page = "input"
         elif st.button("Cancel"):
-            st.experimental_rerun()
+            st.rerun()
 
 def data_description_page():
     side_bar()
@@ -98,9 +128,7 @@ def data_description_page():
         # Displaying the DataFrame as a table
         st.table(info_df)
     if st.button("show DataSet"):
-        st.table(st.session_state.df)
-    # if st.button("Back"):
-    #     st.session_state.page = "home"
+        st.write(st.session_state.df)
 
 def column_describe_page():
     side_bar()
@@ -144,7 +172,7 @@ def null_val_handle_page():
     if st.button("Fill NULL values"):
         st.session_state.page = "fill_null_val"
     if st.button("show DataSet"):
-        st.table(st.session_state.df)
+        st.write(st.session_state.df)
 
 def remove_col_page():
     side_bar()
@@ -163,7 +191,7 @@ def remove_col_page():
 
 def fill_null_val():
     side_bar()
-    
+
     with st.form(key='fill_null_values'):
         st.header('Fill NULL values')
         columns = st.session_state.df.columns.to_list()
@@ -208,69 +236,13 @@ def encode_data():
 
 def feature_scale():
     side_bar()
-
-    numeric_columns = st.session_state.df.select_dtypes(include=['int64', 'float64']).columns.tolist()
-    
-    if "normalize_scaler" not in st.session_state:
-        st.session_state.normalize_scaler = False
-    if "standardize_scaler" not in st.session_state:
-        st.session_state.standardize_scaler = False
-
-    button_placeholder_norm = st.empty()
-    button_placeholder_stan = st.empty()
-    button_placeholder_show = st.empty()
-# Create a button inside the placeholder
-    button_clicked1 = button_placeholder_norm.button("Normalization (MinMax Scaler)")
-    button_clicked2 = button_placeholder_stan.button("Standardization (Standard Scaler)")
-    button_clicked3 = button_placeholder_show.button("Show DataSet")
-# If the button is clicked, clear the placeholder to hide the button
-    if button_clicked1:
-        button_placeholder_norm.empty()
-        button_placeholder_stan.empty()
-        button_placeholder_show.empty()
-        if st.button("Normalize whole dataset"):
-            scaler = MinMaxScaler()
-            st.session_state.df[numeric_columns] = scaler.fit_transform(st.session_state.df[numeric_columns])
-            st.table(st.session_state.df)
-
-        st.write("OR")
-        st.session_state.selected_column = st.selectbox("Select a column to normalize", numeric_columns)
-
-        if st.button("Normalize a column"):
-            scaler = MinMaxScaler()
-            st.session_state.df[st.session_state.selected_column] = scaler.fit_transform(st.session_state.df[[st.session_state.selected_column]])
-            st.table(st.session_state.df)
-        if st.button("back"):
-            button_clicked1 = button_placeholder_norm.button("Normalization (MinMax Scaler)")
-            button_clicked2 = button_placeholder_stan.button("Standardization (Standard Scaler)")
-
-    if button_clicked2:
-        button_placeholder_norm.empty()
-        button_placeholder_stan.empty()
-        button_placeholder_show.empty()
-        if st.button("Standardize whole dataset"):
-            scaler = StandardScaler()
-            st.session_state.df[numeric_columns] = scaler.fit_transform(st.session_state.df[numeric_columns])
-            st.table(st.session_state.df)
-        st.write("OR")
-        st.session_state.selected_column = st.selectbox("Select a column to standardize", numeric_columns)
-
-        if st.button("Submit"):
-            scaler = StandardScaler()
-            st.session_state.df[st.session_state.selected_column] = scaler.fit_transform(st.session_state.df[[st.session_state.selected_column]])
-            st.table(st.session_state.df)
-        if st.button("back"):
-            button_clicked1 = button_placeholder_norm.button("Normalization (MinMax Scaler)")
-            button_clicked2 = button_placeholder_stan.button("Standardization (Standard Scaler)")
-    
-    if button_clicked3:
-        button_placeholder_norm.empty()
-        button_placeholder_stan.empty()
-        button_placeholder_show.empty()
-        st.table(st.session_state.df)
-        if st.button("back"):
-            button_clicked1 = button_placeholder_norm.button("Normalization (MinMax Scaler)")
-            button_clicked2 = button_placeholder_stan.button("Standardization (Standard Scaler)")
+    st.header("Feature Scaling")
+    if st.button("Normalization (MinMax Scaler)"):
+        st.session_state.page = "normalize_scaler"
+    if st.button("Standardization (Standard Scaler)"):
+        st.session_state.page = "standardize_scaler"
+    if st.button("Show DataSet"):
+        st.write(st.session_state.df)
 
 def download():
     side_bar()
@@ -317,6 +289,10 @@ def main():
         reset_page()
     elif st.session_state.page == "confirm_page":
         confirm_page()
+    elif st.session_state.page == "normalize_scaler":
+        normalize_scaler_page()
+    elif st.session_state.page == "standardize_scaler":
+        Standardscaler_page()
 
 if __name__ == "__main__":
     main()
