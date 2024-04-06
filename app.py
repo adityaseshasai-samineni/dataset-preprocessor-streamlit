@@ -185,25 +185,27 @@ def feature_selection_page():
     side_bar()
 
     st.header("Feature Selection")
-    st.write("Correlation Matrix of the dataset:")
     
     numerical_columns = st.session_state.df.select_dtypes(include=['int','float']).columns.tolist()
+    if len(numerical_columns)==0:
+        st.write("No numerical columns found in the dataset.")
+    else:    
+        st.write("Correlation Matrix of the dataset:")
+        corr = st.session_state.df[numerical_columns].corr()
+        mask = np.triu(np.ones_like(corr, dtype=bool))
+        f, ax = plt.subplots(figsize=(11, 9))
+        sns.heatmap(corr,annot=True,mask=mask, cmap=plt.cm.Reds, vmax=.3, center=0,
+                    square=True, linewidths=.5, cbar_kws={"shrink": .5})
+        st.pyplot(f)
 
-    corr = st.session_state.df[numerical_columns].corr()
-    mask = np.triu(np.ones_like(corr, dtype=bool))
-    f, ax = plt.subplots(figsize=(11, 9))
-    sns.heatmap(corr,annot=True,mask=mask, cmap=plt.cm.Reds, vmax=.3, center=0,
-                square=True, linewidths=.5, cbar_kws={"shrink": .5})
-    st.pyplot(f)
-
-    with st.form(key='drop_columns'):
-        columns = st.session_state.df.columns.to_list()
-        selected_columns = st.multiselect("Select columns to drop", columns)
-        submit_button = st.form_submit_button("Submit")
-        if submit_button:
-            st.session_state.df = st.session_state.df.drop(selected_columns, axis=1)
-            logging.info(f"Dropped columns: {', '.join(selected_columns)}")
-            st.rerun()
+        with st.form(key='drop_columns'):
+            columns = st.session_state.df.select_dtypes(include=['int','float']).columns.tolist()
+            selected_columns = st.multiselect("Select columns to drop", columns)
+            submit_button = st.form_submit_button("Submit")
+            if submit_button:
+                st.session_state.df = st.session_state.df.drop(selected_columns, axis=1)
+                logging.info(f"Dropped columns: {', '.join(selected_columns)}")
+                st.rerun()
 
 def null_val_handle_page():
     side_bar()
@@ -249,27 +251,35 @@ def fill_null_val():
         col_name = st.session_state.selected_column = st.selectbox("Select a column to FILL", columns)
         fill_method = st.radio("Choose a method to fill NULL values", ("Zero","Mean", "Median", "Mode","Forwardfill","Backfill"))
         submit_button = st.form_submit_button("Submit")
+        numerical_columns = st.session_state.df.select_dtypes(include=['int','float']).columns.tolist()
         if submit_button:
             if col_name in st.session_state.df.columns.to_list():
-                if fill_method == "Zero":
-                    st.session_state.df[col_name].fillna(0, inplace=True)
-                    logging.info(f"Filled column \"{col_name}\" with 0")
-                elif fill_method == "Mean":
-                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].mean(), inplace=True)
-                    logging.info(f"Filled column \"{col_name}\" with mean")
-                elif fill_method == "Median":
-                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].median(), inplace=True)
-                    logging.info(f"Filled column \"{col_name}\" with median")
-                elif fill_method == 'Mode':
-                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].mode()[0], inplace=True)
-                    logging.info(f"Filled column \"{col_name}\" with mode")
-                elif fill_method == 'Forwardfill':
+                if fill_method == 'Forwardfill':
                     st.session_state.df[col_name] = st.session_state.df[col_name].ffill()
+                    st.write(f"Filled column \"{col_name}\" with forwardfill")
                     logging.info(f"Filled column \"{col_name}\" with forwardfill")
                 elif fill_method == 'Backfill':
                     st.session_state.df[col_name] = st.session_state.df[col_name].bfill()
+                    st.write(f"Filled column \"{col_name}\" with backfill")
                     logging.info(f"Filled column \"{col_name}\" with backfill")
-                st.write(f"The column '{col_name}' Filled")
+                elif fill_method == "Zero" and col_name in numerical_columns:
+                    st.session_state.df[col_name].fillna(0, inplace=True)
+                    st.write(f"Filled column \"{col_name}\" with 0")
+                    logging.info(f"Filled column \"{col_name}\" with 0")
+                elif fill_method == "Mean" and col_name in numerical_columns:
+                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].mean(), inplace=True)
+                    st.write(f"Filled column \"{col_name}\" with mean")
+                    logging.info(f"Filled column \"{col_name}\" with mean")
+                elif fill_method == "Median" and col_name in numerical_columns:
+                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].median(), inplace=True)
+                    st.write(f"Filled column \"{col_name}\" with median")
+                    logging.info(f"Filled column \"{col_name}\" with median")
+                elif fill_method == 'Mode' and col_name in numerical_columns:
+                    st.session_state.df[col_name].fillna(st.session_state.df[col_name].mode()[0], inplace=True)
+                    st.write(f"Filled column \"{col_name}\" with mode")
+                    logging.info(f"Filled column \"{col_name}\" with mode")
+                else:
+                    st.write(f"The column '{col_name}' is not a numerical column.")            
             else:
                 st.write(f"The column '{col_name}' does not exist in the DataFrame.")
                 logging.error(f"Column \"{col_name}\" does not exist in the DataFrame")
