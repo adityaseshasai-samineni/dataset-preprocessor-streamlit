@@ -88,7 +88,7 @@ def reset_page():
     if st.button("Submit") and user_input == "reset":
         st.session_state.df = st.session_state.original_df.copy()
         logging.info("Performed DataFrame reset")
-        st.rerun()
+        st.write("DataFrame has been reset.")
 
 def home_page():
     if st.button("Data Description"):
