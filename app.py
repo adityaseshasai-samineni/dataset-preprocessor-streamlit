@@ -344,36 +344,28 @@ def download():
 
 def documentation_page():
     side_bar()
-
     st.header("Documentation")
-
     st.subheader("Upload Your Dataset")
-    st.write("You can upload your dataset in CSV or Excel format. The dataset will be read into a DataFrame.")
-
+    st.write("You can upload your dataset in CSV or Excel format. The dataset will be read into a DataFrame. The DataFrame is a two-dimensional labeled data structure with columns of potentially different types. It is generally the most commonly used pandas object.")
     st.subheader("Data Description")
-    st.write("You can view a description of the dataset or a specific column. The description includes count, mean, std, min, 25%, 50%, 75%, and max for numerical columns and count, unique, top, and freq for categorical columns.")
-
+    st.write("This section provides a detailed statistical summary of the dataset or a specific column. For numerical columns, the description includes count, mean, standard deviation, minimum value, 25th percentile, median (50th percentile), 75th percentile, and maximum value. For categorical columns, the description includes count, number of unique values, most frequent value, and frequency of the most frequent value.")
     st.subheader("Handle Null Values")
-    st.write("You can handle null values in the dataset. You can view the null values, remove columns with null values, drop rows with null values, or fill null values with a specific value.")
-
+    st.write("This section provides various options to handle null values in the dataset. You can view the count of null values in each column, remove columns with null values, drop rows with null values, or fill null values with a specific value (like zero, mean, median, mode, forward fill, or back fill). For categorical columns, only forward fill and back fill are available.")
     st.subheader("Encode Data")
-    st.write("You can encode categorical columns in the dataset. The selected column will be replaced with one-hot encoded columns.")
-
+    st.write("This section allows you to encode categorical columns in the dataset using one-hot encoding. The selected column will be replaced with multiple columns (one for each unique value in the column), where each row has a 1 in the column corresponding to the value it had and 0 in all other new columns.")
     st.subheader("Feature Scaling")
-    st.write("You can scale numerical columns in the dataset. You can normalize the whole dataset or a specific column, or standardize the whole dataset or a specific column.")
-
+    st.write("This section provides options to scale numerical columns in the dataset. You can normalize (MinMax Scaler) or standardize (Standard Scaler) the whole dataset or a specific column. Normalization scales the data between 0 and 1, while standardization scales data to have a mean of 0 and a standard deviation of 1.")
     st.subheader("Feature Selection")
-    st.write("You can select features in the dataset. You can view a correlation matrix of the dataset and drop selected columns.")
-
+    st.write("This section allows you to select features in the dataset. You can view a correlation matrix of the dataset and drop selected columns. The correlation matrix provides a visual representation of the linear relationships between variables.")
     st.subheader("Download the Dataset")
-    st.write("You can download the preprocessed dataset in CSV or Excel format. You can also download the log file containing the actions performed on the dataset.")
-
+    st.write("This section allows you to download the preprocessed dataset in CSV or Excel format. You can also download the log file containing the actions performed on the dataset. This can be useful for auditing and debugging purposes.")
     st.subheader("Reset DataFrame")
-    st.write("You can reset the DataFrame. This action reverses all the operations performed on the DataFrame.")
-
+    st.write("This section allows you to reset the DataFrame. This action reverses all the operations performed on the DataFrame, returning it to its original state when it was first uploaded.")
     st.subheader("Work with Another Dataset")
-    st.write("You can choose to work with another dataset. All the work done on the current dataset will be lost.")
-
+    st.write("This section allows you to choose to work with another dataset. All the work done on the current dataset will be lost. This is useful when you want to preprocess multiple datasets in one session. Be sure to download the preprocessed dataset before switching to another dataset.")
+    st.subheader("Logging")
+    st.write("All the operations performed on the dataset are logged. The log file can be downloaded along with the preprocessed dataset. The log file contains information such as the name of the operation, the time it was performed, and any additional details.")
+    
 def main():
 
     logging.basicConfig(filename='logfile.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
