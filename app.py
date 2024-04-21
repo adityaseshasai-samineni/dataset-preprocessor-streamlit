@@ -160,7 +160,7 @@ def column_describe_page():
 
 def input():
     st.title("Dataset Preprocessor")
-    st.write("Welcome to the Dataset Preprocessor app! This tool helps you preprocess your datasets.")
+    st.write("Welcome to Dataset Preprocessor: Your Gateway to Efficient Data Understanding and Preprocessing!")
     
     st.header("Upload Your Dataset")
     uploaded_file = st.file_uploader("Choose a CSV or Excel file", type=["csv", "xlsx"])
@@ -365,7 +365,7 @@ def documentation_page():
     st.write("This section allows you to choose to work with another dataset. All the work done on the current dataset will be lost. This is useful when you want to preprocess multiple datasets in one session. Be sure to download the preprocessed dataset before switching to another dataset.")
     st.subheader("Logging")
     st.write("All the operations performed on the dataset are logged. The log file can be downloaded along with the preprocessed dataset. The log file contains information such as the name of the operation, the time it was performed, and any additional details.")
-    
+
 def main():
 
     logging.basicConfig(filename='logfile.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
