@@ -114,30 +114,15 @@ def data_description_page():
         st.session_state.page = "column_form"
     if st.button("Dataset's Properties"):
         st.table(st.session_state.df.describe(include='all'))
-        buf = StringIO()
-        st.session_state.df.info(buf=buf)
-        df_info = buf.getvalue()
 
-        info_data = []
-        sno = 1
-        parse_started = False
-        for line in df_info.split('\n'):
-            if line.startswith('dtypes'):
-                parse_started = False
-            if parse_started:
-                if line.strip():
-                    columns = line.split()
-                    col_name = columns[1]
-                    non_null_count = columns[2]
-                    dtype = columns[4]
-                    info_data.append([sno, col_name, non_null_count, dtype])
-                    sno += 1
-            elif line.startswith('---'):
-                parse_started = True
-        logging.info("Dataset's Properties displayed")
+        col_names = st.session_state.df.columns
+        non_null_counts = st.session_state.df.count()
+        dtypes = st.session_state.df.dtypes
+        info_data = [[i+1, col_names[i], non_null_counts[i], dtypes[i]] for i in range(len(col_names))]
+    
         # Creating a DataFrame from the parsed info data
-        info_df = pd.DataFrame(info_data, columns=['sno', 'Column', 'Non-Null Count', 'Dtype'])
-
+        info_df = pd.DataFrame(info_data, columns=['sno', 'Column', 'Non-Null Count', 'Datatype'])
+    
         # Displaying the DataFrame as a table
         st.table(info_df)
     if st.button("show DataSet"):
@@ -209,10 +194,13 @@ def feature_selection_page():
 
 def null_val_handle_page():
     side_bar()
-
     st.header("Handle NULL values")
-    if st.button("Show NULL values"):
-        st.write(st.session_state.df.isnull().sum()) 
+    
+    null_counts_series = st.session_state.df.isnull().sum()
+    null_counts_df = null_counts_series.reset_index()
+    null_counts_df.columns = ['Column', 'Null Count']
+    st.table(null_counts_df)
+
     if st.button("Remove columns"):
         st.session_state.page = "remove_col"
     if st.button("Drop NULL values"):
