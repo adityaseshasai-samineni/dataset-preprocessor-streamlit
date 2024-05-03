@@ -10,6 +10,14 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+hide_ele="""
+        <style>
+        #Mainmenu {visibility:hidden;}
+        footer {visibility:hidden;}
+        header {visibility:hidden;}
+        </style>
+        """
+
 def side_bar():
     st.session_state.confirm_reset = False
     with st.sidebar:
@@ -32,7 +40,9 @@ def side_bar():
             st.session_state.page = "confirm_page"
         if st.button("Documentation"):
             st.session_state.page = "documentation"
+
 def normalize_scaler_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     numeric_columns = st.session_state.df.select_dtypes(include=['int64', 'float64']).columns.tolist()
     if st.button("Normalize whole dataset"):
         scaler = MinMaxScaler()
@@ -50,6 +60,7 @@ def normalize_scaler_page():
         st.session_state.page = "feature_scale"
 
 def Standardscaler_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     numeric_columns = st.session_state.df.select_dtypes(include=['int64', 'float64']).columns.tolist()
     if st.button("Standardize whole dataset"):
         scaler = StandardScaler()
@@ -67,6 +78,7 @@ def Standardscaler_page():
         st.session_state.page = "feature_scale"
 
 def confirm_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
     st.title("Work with another dataset")
     st.write("All the work done on the current dataset will be lost.")
@@ -80,6 +92,7 @@ def confirm_page():
         st.rerun()
  
 def reset_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
     st.title("Reset DataFrame")
     st.write("This action reverses all the operations performed on the DataFrame.")
@@ -91,6 +104,7 @@ def reset_page():
         st.write("DataFrame has been reset.")
 
 def home_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     if st.button("Data Description"):
         st.session_state.page = "data_description"
     if st.button("Handle Null values"):
@@ -107,6 +121,7 @@ def home_page():
         st.session_state.page = "documentation"
 
 def data_description_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
             
     st.header("Data Description Page")
@@ -115,20 +130,30 @@ def data_description_page():
     if st.button("Dataset's Properties"):
         st.table(st.session_state.df.describe(include='all'))
 
+        # Get column names
         col_names = st.session_state.df.columns
+        
+        # Get non-null counts for each column
         non_null_counts = st.session_state.df.count()
-        dtypes = st.session_state.df.dtypes
+        
+        # Get data types for each column
+        # Convert the dtypes to strings to avoid the Arrow serialization error
+        dtypes = st.session_state.df.dtypes.astype(str)
+        
+        # Combine the information into a list of lists
         info_data = [[i+1, col_names[i], non_null_counts[i], dtypes[i]] for i in range(len(col_names))]
-    
+        
         # Creating a DataFrame from the parsed info data
         info_df = pd.DataFrame(info_data, columns=['sno', 'Column', 'Non-Null Count', 'Datatype'])
-    
+        
         # Displaying the DataFrame as a table
         st.table(info_df)
+
     if st.button("show DataSet"):
         st.write(st.session_state.df)
 
 def column_describe_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
 
     with st.form(key='column_form'):
@@ -144,6 +169,7 @@ def column_describe_page():
                 st.write(f"The column '{col_name}' does not exist in the DataFrame.")
 
 def input():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     st.title("Dataset Preprocessor")
     st.write("Welcome to Dataset Preprocessor: Your Gateway to Efficient Data Understanding and Preprocessing!")
     
@@ -167,6 +193,7 @@ def input():
             st.session_state.page = "home"
 
 def feature_selection_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
 
     st.header("Feature Selection")
@@ -193,6 +220,7 @@ def feature_selection_page():
                 st.rerun()
 
 def null_val_handle_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
     st.header("Handle NULL values")
     
@@ -213,6 +241,7 @@ def null_val_handle_page():
         st.write(st.session_state.df)
 
 def remove_col_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
 
     with st.form(key='remove_col'):
@@ -231,6 +260,7 @@ def remove_col_page():
 
 
 def fill_null_val():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
 
     with st.form(key='fill_null_values'):
@@ -273,6 +303,7 @@ def fill_null_val():
                 logging.error(f"Column \"{col_name}\" does not exist in the DataFrame")
 
 def encode_data():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
     st.header("Categorical Columns")
     categorical_columns = st.session_state.df.select_dtypes(include=['object'])
@@ -291,6 +322,7 @@ def encode_data():
         st.write(st.session_state.df)
 
 def feature_scale():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
     st.header("Feature Scaling")
     if st.button("Normalization (MinMax Scaler)"):
@@ -301,6 +333,7 @@ def feature_scale():
         st.write(st.session_state.df)
 
 def download():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
 
     st.header("Download the preprocessed dataset")
@@ -331,6 +364,7 @@ def download():
         st.markdown(href, unsafe_allow_html=True)
 
 def documentation_page():
+    st.markdown(hide_ele,unsafe_allow_html=True)
     side_bar()
     st.header("Documentation")
     st.subheader("Upload Your Dataset")
